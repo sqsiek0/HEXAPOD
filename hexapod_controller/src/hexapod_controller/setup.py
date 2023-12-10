@@ -22,6 +22,7 @@ setup(
     license='Free for all',
     tests_require=['pytest'],
     entry_points={
+        #TODO: Podmienić ten keyboard_node na phone
         'console_scripts': [
             "body_IK_node = hexapod_controller.body:main",
             "keyboard_node = hexapod_controller.teleop_keyboard_test:main",

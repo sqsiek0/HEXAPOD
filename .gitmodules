@@ -1,0 +1,3 @@
+[submodule "hexapod_program/HEXAPOD"]
+	path = hexapod_program/HEXAPOD
+	url = https://github.com/sqsiek0/HEXAPOD.git
