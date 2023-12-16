@@ -1,6 +1,6 @@
 # Welcome to our HEXAPOD! To get started, run `docker compose up -d` in this directory
 # You can configure your container here, by modifying this file
-version: "3.9"
+version: "3.3"
 services:
   ros2:
     # container_name: ros2

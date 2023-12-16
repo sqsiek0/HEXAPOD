@@ -36,7 +36,9 @@ WORKDIR /home/ros/lib
 RUN git clone https://github.com/ROBOTIS-GIT/DynamixelSDK.git
 
 # resolves this issue: "1 package had stderr output: my_robot_controller" when we are building the new package
-RUN pip install setuptools==58.2.0 \
+RUN sudo pip3 install setuptools==58.2.0 \
+    flask-mqtt \
+    paho-mqtt \
     dynamixel_sdk
     # RPi.GPIO
 

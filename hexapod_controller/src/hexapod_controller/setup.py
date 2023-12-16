@@ -26,6 +26,7 @@ setup(
         'console_scripts': [
             "body_IK_node = hexapod_controller.body:main",
             "keyboard_node = hexapod_controller.teleop_keyboard_test:main",
+            "phone_node = hexapod_controller.phone_operate:main",
             "joystick_node = hexapod_controller.joystick:main",
             "leg_1_node = hexapod_controller.legs:leg1",
             "leg_2_node = hexapod_controller.legs:leg2",

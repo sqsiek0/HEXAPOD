@@ -7,6 +7,7 @@
 
 # detecting the OS
 import sys
+import paho.mqtt.client as mqtt
 
 # standard ros2 functionality
 import rclpy
@@ -20,7 +21,7 @@ else:
     import termios
     import tty
 
-
+client = mqtt.Client("RobotClient")
 msg = """
 This node takes keypresses from the keyboard and publishes them
 as BodyIKCalculate message.
@@ -159,6 +160,9 @@ def positionSubscriber(msg: BodyIKCalculate):
     rotY = msg.position_of_the_body[4]
     rotZ = msg.position_of_the_body[5]
     print(f'currently:\n\ttransX: {transX}\n\ttransY: {transY}\n\ttransZ {transZ}\n\trotX: {rotX}\n\trotY: {rotY}\n\trotZ: {rotZ}')
+    
+def on_message(client, userdata, message):
+    print(f"Otrzymano wiadomość na temacie {message.topic} z treścią: {message.payload.decode()}")
     # return f'currently:\n\ttransX: {transX}\n\ttransY: {transY}\n\ttransZ {transZ}\n\trotX: {rotX}\n\trotY: {rotY}\n\trotZ: {rotZ}'
 
 def main():
@@ -180,6 +184,11 @@ def main():
     status = 0
     direction = 1
     robot_state = "idle"
+    
+    try:
+        client.connect("104.248.252.28", 1883, 60)  # Połącz z brokerem (IP, port, keepalive)
+    except Exception as e:
+        print(f"Nie udało się połączyć z brokerem MQTT: {e}")
 
     try:
         print(msg)
