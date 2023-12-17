@@ -166,7 +166,7 @@ def main():
 
     rclpy.init()
 
-    node = rclpy.create_node('teleop_keyboard_test')
+    node = rclpy.create_node('phone_operate')
     pub_ = node.create_publisher(BodyIKCalculate, "body_IK_calculations", 10)
     # sub_ = node.create_subscription(BodyIKCalculate, "body_IK_calculations", positionSubscriber, 10)
 

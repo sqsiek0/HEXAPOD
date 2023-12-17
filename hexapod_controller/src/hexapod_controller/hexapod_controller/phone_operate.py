@@ -8,6 +8,8 @@
 # detecting the OS
 import sys
 import paho.mqtt.client as mqtt
+import json
+import time
 
 # standard ros2 functionality
 import rclpy
@@ -21,7 +23,6 @@ else:
     import termios
     import tty
 
-client = mqtt.Client("RobotClient")
 msg = """
 This node takes keypresses from the keyboard and publishes them
 as BodyIKCalculate message.
@@ -163,7 +164,48 @@ def positionSubscriber(msg: BodyIKCalculate):
     
 def on_message(client, userdata, message):
     print(f"Otrzymano wiadomość na temacie {message.topic} z treścią: {message.payload.decode()}")
+    if message.topic == 'robot/walking':
+        on_message_walking(message)
+    elif message.topic == 'robot/turning':
+        on_message_turning(message)
+    elif message.topic == 'robot/translation':
+        on_message_translation(message)
+    elif message.topic == 'robot/rotate':
+        on_message_rotation(message)
     # return f'currently:\n\ttransX: {transX}\n\ttransY: {transY}\n\ttransZ {transZ}\n\trotX: {rotX}\n\trotY: {rotY}\n\trotZ: {rotZ}'
+    
+def on_message_walking(message):
+    print('Callback - walking')
+    data = json.loads(message.payload)
+    print(data['robotState'])
+    
+def on_message_turning(message):
+    print('Callback - turning')
+    data = json.loads(message.payload)
+    
+def on_message_translation(message):
+    print('Callback - translation')
+    data = json.loads(message.payload)
+    
+def on_message_rotation(message):
+    print('Callback - rotation')
+    data = json.loads(message.payload)
+    
+def final_post(data, type):
+    print('test')
+    
+def on_connect(client, userdata, flags, rc):
+    if rc == 0:
+        print("Connected to MQTT Broker!")
+    else:
+        print(f"Failed to connect, return code {rc}\n")
+        
+def on_subscribe(client, userdata, mid, granted_qos):
+    print(f"Subscribed: {mid} with QoS: {granted_qos}")
+    
+def on_disconnect(client, userdata, rc):
+    if rc != 0:
+        print(f"Unexpected disconnection: {rc}")
 
 def main():
     settings = saveTerminalSettings()
@@ -171,7 +213,7 @@ def main():
     rclpy.init()
 
     #TODO: Podmienić noda
-    node = rclpy.create_node('teleop_keyboard_test')
+    node = rclpy.create_node('phone_operate')
     pub_ = node.create_publisher(BodyIKCalculate, "body_IK_calculations", 10)
     # sub_ = node.create_subscription(BodyIKCalculate, "body_IK_calculations", positionSubscriber, 10)
 
@@ -185,73 +227,99 @@ def main():
     direction = 1
     robot_state = "idle"
     
+    client = mqtt.Client()
+    client.on_message = on_message
+    client.on_connect = on_connect
+    client.on_subscribe = on_subscribe
+    client.on_disconnect = on_disconnect
+    
+    
     try:
-        client.connect("104.248.252.28", 1883, 60)  # Połącz z brokerem (IP, port, keepalive)
+        client.connect("134.122.84.130", 1883, 60)  # Połącz z brokerem (IP, port, keepalive)
+        client.subscribe('robot/walking')
+        client.subscribe('robot/turning')
+        client.subscribe('robot/translation')
+        client.subscribe('robot/rotate')
+        
+        client.loop_start()
+        print('Connected and loop started')
+        
     except Exception as e:
-        print(f"Nie udało się połączyć z brokerem MQTT: {e}")
-
+        print(f"Can't connect to MQTT broker: {e}")
+        
     try:
-        print(msg)
-        # print(positionToCalculate(transX, transY, transZ, rotX, rotY, rotZ))
-        print("\n---------------------------\n")
         while True:
-            #TODO: Zrobić by ciągnał z pliku variables
-            key = getKey(settings)
-            # print(positionToCalculate(transX, transY, transZ, rotX, rotY, rotZ))
-            if (status == 14):
-                print(msg)
-            status = (status + 1)
-            if key in moveBindings.keys():
-                transX = transX + moveBindings[key][0]
-                transY = transY + moveBindings[key][1]
-                transZ = transZ + moveBindings[key][2]
-            elif key in rotationBindings.keys():
-                rotX = rotX + rotationBindings[key][0]
-                rotY = rotY + rotationBindings[key][1]
-                rotZ = rotZ + rotationBindings[key][2]              
-            elif key in movementDirection.keys():
-                direction = movementDirection[key]
-            elif key in chooseRobotState.keys():
-                robot_state = chooseRobotState[key]
-            else:
-                transX = 0
-                transY = 0
-                transZ = 0
-                rotX = 0
-                rotY = 0
-                rotZ = 0
-                direction = 1
-                robot_state = "idle"
-                if (key == '\x03'):
-                    break
+            time.sleep(1)
 
-            cmd = BodyIKCalculate()
-            cmd.position_of_the_body[0] = transX
-            cmd.position_of_the_body[1] = transY
-            cmd.position_of_the_body[2] = transZ
-            cmd.position_of_the_body[3] = rotX
-            cmd.position_of_the_body[4] = rotY
-            cmd.position_of_the_body[5] = rotZ
-            cmd.move_direction = direction
-            cmd.robot_state = robot_state
-            pub_.publish(cmd)
+    except KeyboardInterrupt:
+        print("Ending the program...")
+        client.loop_stop()
 
-    except Exception as e:
-        print(e)
+    # while True:
+    #     print('cos')
+    #     key = getKey(settings)
+    # try:
+    #     print(msg)
+    #     # print(positionToCalculate(transX, transY, transZ, rotX, rotY, rotZ))
+    #     print("\n---------------------------\n")
+    #     while True:
+    #         #TODO: Zrobić by ciągnał z pliku variables
+    #         key = getKey(settings)
+    #         # print(positionToCalculate(transX, transY, transZ, rotX, rotY, rotZ))
+    #         if (status == 14):
+    #             print(msg)
+    #         status = (status + 1)
+    #         if key in moveBindings.keys():
+    #             transX = transX + moveBindings[key][0]
+    #             transY = transY + moveBindings[key][1]
+    #             transZ = transZ + moveBindings[key][2]
+    #         elif key in rotationBindings.keys():
+    #             rotX = rotX + rotationBindings[key][0]
+    #             rotY = rotY + rotationBindings[key][1]
+    #             rotZ = rotZ + rotationBindings[key][2]              
+    #         elif key in movementDirection.keys():
+    #             direction = movementDirection[key]
+    #         elif key in chooseRobotState.keys():
+    #             robot_state = chooseRobotState[key]
+    #         else:
+    #             transX = 0
+    #             transY = 0
+    #             transZ = 0
+    #             rotX = 0
+    #             rotY = 0
+    #             rotZ = 0
+    #             direction = 1
+    #             robot_state = "idle"
+    #             if (key == '\x03'):
+    #                 break
 
-    finally:
-        cmd = BodyIKCalculate()
-        cmd.position_of_the_body[0] = 0
-        cmd.position_of_the_body[1] = 0
-        cmd.position_of_the_body[2] = 0
-        cmd.position_of_the_body[3] = 0
-        cmd.position_of_the_body[4] = 0
-        cmd.position_of_the_body[5] = 0
-        cmd.move_direction = 1
-        cmd.robot_state = "idle"
-        pub_.publish(cmd)
+    #         cmd = BodyIKCalculate()
+    #         cmd.position_of_the_body[0] = transX
+    #         cmd.position_of_the_body[1] = transY
+    #         cmd.position_of_the_body[2] = transZ
+    #         cmd.position_of_the_body[3] = rotX
+    #         cmd.position_of_the_body[4] = rotY
+    #         cmd.position_of_the_body[5] = rotZ
+    #         cmd.move_direction = direction
+    #         cmd.robot_state = robot_state
+    #         pub_.publish(cmd)
 
-        restoreTerminalSettings(settings)
+    # except Exception as e:
+    #     print(e)
+
+    # finally:
+    #     cmd = BodyIKCalculate()
+    #     cmd.position_of_the_body[0] = 0
+    #     cmd.position_of_the_body[1] = 0
+    #     cmd.position_of_the_body[2] = 0
+    #     cmd.position_of_the_body[3] = 0
+    #     cmd.position_of_the_body[4] = 0
+    #     cmd.position_of_the_body[5] = 0
+    #     cmd.move_direction = 1
+    #     cmd.robot_state = "idle"
+    #     pub_.publish(cmd)
+
+    #     restoreTerminalSettings(settings)
 
 
 if __name__ == '__main__':
