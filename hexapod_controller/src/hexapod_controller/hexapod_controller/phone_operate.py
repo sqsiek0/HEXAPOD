@@ -29,51 +29,6 @@ else:
     import termios
     import tty
 
-msg = """
-This node takes keypresses from the keyboard and publishes them
-as BodyIKCalculate message.
-
-|---------------------------------------------------------------------------|
-|                   List of keys used to change the values                  |
-|---------------------------------------------------------------------------|
-|   Translation:            |   Rotation:           |   Movement direction: |
-|       Q   W   E           |       U   I           |       1               |
-|       A   S   D           |       J   K           |       2               |
-|                           |       M   ,           |       3               |
-|                           |                       |                       |
-|---------------------------|-----------------------|-----------------------|
-|   W / S : X translation   |   U / I : X rotation  |   1 : move forward    |
-|   A / D : Y translation   |   J / K : Y rotation  |   2 : move backward   |
-|   Q / E : Z translation   |   M / , : Z rotation  |   3 : move stop       |
-|                           |                       |                       |
-|---------------------------------------------------------------------------|
-
-
-|---------------------------------------------------------------------------|
-|               List of keys used to change state of the robot              |
-|---------------------------------------------------------------------------|
-|   Controll mode / state:                                                  |
-|       4   8                                                               |
-|       5   9                                                               |
-|       6   0                                                               |
-|       7                                                                   |
-|                                                                           |
-|---------------------------------------------------------------------------|
-|   4 : walk in a given direction (can be changed with 1 and 2)             |
-|   5 : rotate the robot counter-clockwise                                  |
-|   6 : rotate the robot clockwise                                          |
-|   7 : enter the body manipulation mode (standing still)                   |
-|   8 : enable the torque on every servo                                    |
-|   9 : disable the torque on every servo                                   |
-|                                                                           |
-|   0 : idle state, do nothing                                              |
-|                                                                           |
-|---------------------------------------------------------------------------|
-
-anything else : back to initial position
-
-CTRL-C        : go back to initial position and quit
-"""
 
 chooseRobotState = {
     '0': "idle",
@@ -225,12 +180,16 @@ def final_post(data, type):
         elif type == 'translation':
             print('translation')
             key = data['translationState']
+            keyState = data['robotState']
+            robot_state = chooseRobotState[keyState]
             transX = transX + moveBindings[key][0]
             transY = transY + moveBindings[key][1]
             transZ = transZ + moveBindings[key][2]
         elif type == 'rotation':
             print('rotation')
             key = data['rotationState']
+            keyState = data['robotState']
+            robot_state = chooseRobotState[keyState]
             rotX = rotX + rotationBindings[key][0]
             rotY = rotY + rotationBindings[key][1]
             rotZ = rotZ + rotationBindings[key][2]
@@ -245,17 +204,6 @@ def final_post(data, type):
             robot_state = "idle"
     except Exception as e:
         print(e)
-    # finally:
-    #     cmd = BodyIKCalculate()
-    #     cmd.position_of_the_body[0] = 0
-    #     cmd.position_of_the_body[1] = 0
-    #     cmd.position_of_the_body[2] = 0
-    #     cmd.position_of_the_body[3] = 0
-    #     cmd.position_of_the_body[4] = 0
-    #     cmd.position_of_the_body[5] = 0
-    #     cmd.move_direction = 1
-    #     cmd.robot_state = "idle"
-    #     pub_.publish(cmd)
         
     print(transX, transY, transZ, rotX, rotY, rotZ, direction, robot_state)
     cmd = BodyIKCalculate()
@@ -283,28 +231,13 @@ def on_disconnect(client, userdata, rc):
         print(f"Unexpected disconnection: {rc}")
 
 def main():
-    settings = saveTerminalSettings()
-
-    
-    
+    # settings = saveTerminalSettings()
     # sub_ = node.create_subscription(BodyIKCalculate, "body_IK_calculations", positionSubscriber, 10)
-
-    transX = 0
-    transY = 0
-    transZ = 0
-    rotX = 0
-    rotY = 0
-    rotZ = 0
-    status = 0
-    direction = 1
-    robot_state = "idle"
-    
     client = mqtt.Client()
     client.on_message = on_message
     client.on_connect = on_connect
     client.on_subscribe = on_subscribe
     client.on_disconnect = on_disconnect
-    
     
     try:
         client.connect("134.122.84.130", 1883, 60)  # Połącz z brokerem (IP, port, keepalive)
@@ -315,7 +248,6 @@ def main():
         
         client.loop_start()
         print('Connected and loop started')
-        
     except Exception as e:
         print(f"Can't connect to MQTT broker: {e}")
         
@@ -375,24 +307,5 @@ def main():
     #         cmd.move_direction = direction
     #         cmd.robot_state = robot_state
     #         pub_.publish(cmd)
-
-    # except Exception as e:
-    #     print(e)
-
-    # finally:
-    #     cmd = BodyIKCalculate()
-    #     cmd.position_of_the_body[0] = 0
-    #     cmd.position_of_the_body[1] = 0
-    #     cmd.position_of_the_body[2] = 0
-    #     cmd.position_of_the_body[3] = 0
-    #     cmd.position_of_the_body[4] = 0
-    #     cmd.position_of_the_body[5] = 0
-    #     cmd.move_direction = 1
-    #     cmd.robot_state = "idle"
-    #     pub_.publish(cmd)
-
-    #     restoreTerminalSettings(settings)
-
-
 if __name__ == '__main__':
     main()
