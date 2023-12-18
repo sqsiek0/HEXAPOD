@@ -17,6 +17,12 @@ import rclpy
 # importing our new message type
 from hexapod_controller_interfaces.msg import BodyIKCalculate
 
+rclpy.init()
+
+    #TODO: Podmienić noda
+node = rclpy.create_node('phone_operate')
+pub_ = node.create_publisher(BodyIKCalculate, "body_IK_calculations", 10)
+
 if sys.platform == 'win32':
     import msvcrt
 else:
@@ -177,22 +183,91 @@ def on_message(client, userdata, message):
 def on_message_walking(message):
     print('Callback - walking')
     data = json.loads(message.payload)
-    print(data['robotState'])
+    final_post(data, 'walking')
     
 def on_message_turning(message):
     print('Callback - turning')
     data = json.loads(message.payload)
+    final_post(data, 'turning')
     
 def on_message_translation(message):
     print('Callback - translation')
     data = json.loads(message.payload)
+    final_post(data, 'translation')
     
 def on_message_rotation(message):
     print('Callback - rotation')
     data = json.loads(message.payload)
+    final_post(data, 'rotation')
     
-def final_post(data, type):
-    print('test')
+def final_post(data, type): 
+    transX = 0
+    transY = 0
+    transZ = 0
+    rotX = 0
+    rotY = 0
+    rotZ = 0
+    status = 0
+    direction = 1
+    robot_state = "idle"
+    
+    try:
+        if type == 'walking':
+            print('walking')
+            keyDirection = data['moveDirection']
+            keyState = data['robotState']
+            direction = movementDirection[keyDirection]
+            robot_state = chooseRobotState[keyState]
+        elif type == 'turning':
+            print('turning')
+            key = data['robotState']
+            robot_state = chooseRobotState[key]
+        elif type == 'translation':
+            print('translation')
+            key = data['translationState']
+            transX = transX + moveBindings[key][0]
+            transY = transY + moveBindings[key][1]
+            transZ = transZ + moveBindings[key][2]
+        elif type == 'rotation':
+            print('rotation')
+            key = data['rotationState']
+            rotX = rotX + rotationBindings[key][0]
+            rotY = rotY + rotationBindings[key][1]
+            rotZ = rotZ + rotationBindings[key][2]
+        else:
+            transX = 0
+            transY = 0
+            transZ = 0
+            rotX = 0
+            rotY = 0
+            rotZ = 0
+            direction = 1
+            robot_state = "idle"
+    except Exception as e:
+        print(e)
+    # finally:
+    #     cmd = BodyIKCalculate()
+    #     cmd.position_of_the_body[0] = 0
+    #     cmd.position_of_the_body[1] = 0
+    #     cmd.position_of_the_body[2] = 0
+    #     cmd.position_of_the_body[3] = 0
+    #     cmd.position_of_the_body[4] = 0
+    #     cmd.position_of_the_body[5] = 0
+    #     cmd.move_direction = 1
+    #     cmd.robot_state = "idle"
+    #     pub_.publish(cmd)
+        
+    print(transX, transY, transZ, rotX, rotY, rotZ, direction, robot_state)
+    cmd = BodyIKCalculate()
+    cmd.position_of_the_body[0] = transX
+    cmd.position_of_the_body[1] = transY
+    cmd.position_of_the_body[2] = transZ
+    cmd.position_of_the_body[3] = rotX
+    cmd.position_of_the_body[4] = rotY
+    cmd.position_of_the_body[5] = rotZ
+    cmd.move_direction = direction
+    cmd.robot_state = robot_state
+    pub_.publish(cmd)
     
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
@@ -210,11 +285,8 @@ def on_disconnect(client, userdata, rc):
 def main():
     settings = saveTerminalSettings()
 
-    rclpy.init()
-
-    #TODO: Podmienić noda
-    node = rclpy.create_node('phone_operate')
-    pub_ = node.create_publisher(BodyIKCalculate, "body_IK_calculations", 10)
+    
+    
     # sub_ = node.create_subscription(BodyIKCalculate, "body_IK_calculations", positionSubscriber, 10)
 
     transX = 0
