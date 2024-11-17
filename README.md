@@ -210,6 +210,20 @@ With newly designed and 3D printed legs, we were able to increase the friction o
 
 ----
 
+### Remote Control via Phone using MQTT and DigitalOcean
+
+We have introduced a new feature that allows remote control of the HEXAPOD robot via a mobile phone. This implementation uses MQTT for efficient message communication and is hosted on DigitalOcean for seamless and reliable connectivity.
+
+This enhancement enables:
+-	Mobile Teleoperation: You can now control the robot’s movements directly from your phone, offering greater flexibility and convenience.
+-	Scalable Architecture: The integration of DigitalOcean provides a scalable platform for hosting the MQTT broker, ensuring low-latency communication.
+-	Ease of Use: The mobile interface simplifies the process of commanding the robot’s actions, making it more user-friendly.
+
+<p align='center'>
+  <img src="./img/hexapod_phone_control" width="375" height="260" />
+</p>
+
+
 ## Issues & plans
 
 ### Current problems:
