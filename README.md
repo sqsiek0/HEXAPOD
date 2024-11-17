@@ -220,7 +220,7 @@ This enhancement enables:
 -	Ease of Use: The mobile interface simplifies the process of commanding the robot’s actions, making it more user-friendly.
 
 <p align='center'>
-  <img src="./img/hexapod_phone_control" width="375" height="260" />
+  <img src="./img/hexapod_phone_control.gif" width="375" height="260" />
 </p>
 
 
